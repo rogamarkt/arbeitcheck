@@ -9459,6 +9459,43 @@ function adminBox(label,val,icon,col){
 
 startSW();
 
+// PWA Install Button
+(function(){
+  let deferredPrompt=null;
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+
+  function showInstallBar(){
+    if(document.getElementById('pwa-install-bar')) return;
+    const bar=document.createElement('div');
+    bar.id='pwa-install-bar';
+    bar.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#0055dd,#00d4ff);color:#fff;border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,212,255,.4);cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;white-space:nowrap;max-width:90vw';
+    if(isIOS){
+      bar.innerHTML='📱 App installieren: Teilen → "Zum Home-Bildschirm" <span onclick="document.getElementById(\'pwa-install-bar\').remove()" style="margin-left:8px;opacity:.7;font-size:18px;line-height:1">×</span>';
+    } else {
+      bar.innerHTML='📱 App auf Handy installieren';
+      bar.onclick=async()=>{
+        if(!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const {outcome}=await deferredPrompt.userChoice;
+        deferredPrompt=null;
+        bar.remove();
+      };
+    }
+    document.body.appendChild(bar);
+    setTimeout(()=>{ if(bar.parentNode) bar.remove(); },15000);
+  }
+
+  if(!isStandalone){
+    window.addEventListener('beforeinstallprompt',e=>{
+      e.preventDefault();
+      deferredPrompt=e;
+      setTimeout(showInstallBar, 2000);
+    });
+    if(isIOS) setTimeout(showInstallBar, 2000);
+  }
+})();
+
 // Wenn Schichten vorhanden: direkt zum Schicht-Tab (nicht Landing-Page)
 (function(){
   try{
